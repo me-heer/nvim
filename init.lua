@@ -674,6 +674,7 @@ require('lazy').setup({
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
+      ---@diagnostic disable-next-line: missing-fields
       require('mason-lspconfig').setup {
         handlers = {
           function(server_name)
@@ -685,6 +686,41 @@ require('lazy').setup({
             require('lspconfig')[server_name].setup(server)
           end,
           jdtls = function()
+            vim.api.nvim_create_autocmd('LspAttach', {
+              group = vim.api.nvim_create_augroup('extend-nvim-java-dap-config', {}),
+              callback = function(args)
+                local client = vim.lsp.get_client_by_id(args.data.client_id)
+
+                if client == nil then
+                  return
+                end
+
+                local server_name = client.name
+
+                if server_name ~= 'jdtls' then
+                  return
+                end
+
+                -- to try and run after `nvim-java` autocmd
+                vim.schedule(function()
+                  local dap = require 'dap'
+                  assert(
+                    dap.configurations.java ~= nil,
+                    "If you see this, nvim-java hasn't set it's dap config. Maybe we need to use `vim.defer_fn` instead of `vim.schedule`"
+                  )
+                  table.insert(dap.configurations.java, {
+                    type = 'java',
+                    request = 'attach',
+                    name = 'Debug (Attach) - Remote',
+                    hostName = '127.0.0.1',
+                    port = 5005,
+                  })
+                end)
+              end,
+              -- depending on your workflow, you may need to remove this.
+              -- If you work on multiple projects in a single Neovim instance, for example
+              once = true,
+            })
             require('java').setup {
               root_markers = {
                 'settings.gradle',
