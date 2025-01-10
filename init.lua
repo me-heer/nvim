@@ -686,7 +686,16 @@ require('lazy').setup({
           end,
           jdtls = function()
             require('java').setup {
-              -- Your custom jdtls settings goes here
+              root_markers = {
+                'settings.gradle',
+                'settings.gradle.kts',
+                'pom.xml',
+                'build.gradle',
+                'mvnw',
+                'gradlew',
+                'build.gradle',
+                'build.gradle.kts',
+              },
             }
             require('lspconfig').jdtls.setup {
               -- Your custom nvim-java configuration goes here
@@ -1043,6 +1052,17 @@ local toggle_terminal = function()
     vim.api.nvim_win_hide(state.floating.win)
   end
 end
+
+local dap = require 'dap'
+dap.configurations.java = {
+  {
+    type = 'java',
+    request = 'attach',
+    name = 'Debug (Attach) - Remote',
+    hostName = '127.0.0.1',
+    port = 5005,
+  },
+}
 
 -- Example usage:
 -- Create a floating window with default dimensions
